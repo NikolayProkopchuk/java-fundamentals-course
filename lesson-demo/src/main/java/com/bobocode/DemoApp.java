@@ -1,6 +1,9 @@
 package com.bobocode;
 
 
+import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.cglib.proxy.MethodInterceptor;
+
 public class DemoApp {
     public static void main(String[] args) {
         GreetingService helloService = createMethodLoggingProxy(GreetingService.class);
@@ -18,6 +21,12 @@ public class DemoApp {
      * @return an instance of a proxy class
      */
     public static <T> T createMethodLoggingProxy(Class<T> targetClass) {
-        throw new UnsupportedOperationException("This method should be implemented.");
+        MethodInterceptor handler = (obj, method, args, proxy) -> {
+            if (method.isAnnotationPresent(LogInvocation.class)) {
+                System.out.printf("[PROXY: Calling method '%s' of the class '%s']%n", method.getName(), targetClass.getSimpleName());
+            }
+            return proxy.invokeSuper(obj, args);
+        };
+        return (T) Enhancer.create(targetClass, handler);
     }
 }
